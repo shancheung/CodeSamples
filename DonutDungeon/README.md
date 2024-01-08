@@ -1,0 +1,1 @@
+This project is written in Java. The intention was to create a prototype game that primarily demonstrates how to use design patterns and how to mix design patterns together to accomplish a goal. This "game" is not intended to be playable.
