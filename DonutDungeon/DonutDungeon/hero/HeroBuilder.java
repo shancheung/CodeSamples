@@ -1,7 +1,6 @@
 package main.java.donutdungeon.hero;
 /*
  * By: Shannon McHugh
- * SER216 - Spring B 2022
  * Hero builder interface section.
  */
 
