@@ -1,10 +1,6 @@
 package main.java.donutdungeon;
 
 /*
- *  I just want you to know I've spent the last 4 days, roughly 10 hours a day
- *  ALONE on this project. I've also been working on the group orject.
- *  It is now 4/23 and I'm feeling sick, my head feels weird.
- *  It is 4/24. I still feel awful.
  *  @author Shannon Mchugh (sjmchugh).
  */
 
