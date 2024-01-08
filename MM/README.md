@@ -1,0 +1,1 @@
+PLEASE DO NOT COPY OR STEAL ANYTHING IN THIS FOLDER, this is my personal project. 
