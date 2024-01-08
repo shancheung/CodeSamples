@@ -1,0 +1,81 @@
+'*****************************************************************************************************************************
+' Shannon McHugh
+'
+' Authors: Shannon
+'******************************************************************************************************************************
+
+Private usrID As Integer
+Private usrRole As String
+Private name As String
+Private pw As String
+Private props() As String
+Private groupNum As Integer
+
+Private Sub class_initialize()
+    usrID = 0
+    usrRole = ""
+    name = ""
+    pw = ""
+    groupNum = 0
+    ReDim props(0)
+End Sub
+
+Public Property Get getRole()
+    getRole = usrRole
+End Property
+
+Property Let setRole(s As String)
+    usrRole = s
+End Property
+ 
+Public Property Get getName()
+    getName = name
+End Property
+
+Property Let setName(s As String)
+    name = s
+End Property
+  
+Public Property Get getPw()
+    getPw = pw
+End Property
+
+Property Let setPw(s As String)
+    pw = s
+End Property
+
+Property Let setUsrID(t As Integer)
+    usrID = t
+End Property
+
+Property Get getUsrID()
+    getUsrID = usrID
+End Property
+
+Public Property Let setPropSize(size As Integer)
+    If size > UBound(props) Then ReDim props(1 To size)
+End Property
+
+Public Property Let rePropSize(size As Integer)
+    ReDim props(1 To size)
+End Property
+
+Property Let setProp(i As Integer, s As String)
+    props(i) = s
+End Property
+
+Property Get getPropSize()
+    getPropSize = UBound(props)
+End Property
+
+Property Get getProp(i As Integer)
+    getProp = props(i)
+End Property
+
+Property Let setGroup(i As Integer)
+    groupNum = i
+End Property
+
+Property Get getGroup()
+    getGroup = groupNum
+End Property

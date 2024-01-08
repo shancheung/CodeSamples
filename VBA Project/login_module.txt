@@ -1,0 +1,245 @@
+'*****************************************************************************************************************************
+' Authors: Shannon
+'
+' Sources:
+'   PK An Excel Expert's Video: https://www.youtube.com/watch?v=n7I5-6fj1kY&list=PL8NX6r0N5-CjWJrh6FynNiW2NzJx972bL&index=1&t=294s
+'   his website: https://www.pk-anexcelexpert.com/vba/adodb-connection/
+'******************************************************************************************************************************
+Option Explicit
+Private usrl As New clsUser
+Public usr As clsUser, tuser As clsUser
+
+Public Sub User_Login(username As String, password As String)
+
+    Dim conn As New ADODB.Connection
+    Dim recs As New ADODB.Recordset
+    Dim q As String, filename As String, actualPass As String
+    Dim i As Integer, j As Integer, counter As Integer
+    Dim recCount As Variant
+    
+    filename = "\sjmchugh_final_db.accdb"
+    
+    conn.Open "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & ThisWorkbook.Path & filename
+    q = "SELECT * FROM users WHERE username = '" & username & "'"
+    recs.Open q, conn, adOpenKeyset, adLockOptimistic
+    
+    actualPass = recs.Fields("password").Value
+    recCount = recs.RecordCount 'returns 1 if record match has been found
+    
+    
+    If recCount = 0 Then
+        MsgBox "Invalid credentials, please contact admin.", vbCritical
+    ElseIf actualPass = password Then
+
+    Call setUserData(usr, recs)
+    recs.Close
+    conn.Close
+        
+    
+    Set usr = usrl  'set global to be the user who logged in
+    
+    j = 0
+    'Set up current user's properties they can access
+    conn.Open "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & ThisWorkbook.Path & filename
+    q = "SELECT * FROM groups"
+    recs.Open q, conn, adOpenKeyset, adLockOptimistic
+    Do While Not recs.EOF
+        If recs.Fields(1).Value = usrl.getGroup Then
+            For i = 0 To recs.Fields.count - 1  'Property booleans start at 2
+                If recs.Fields(i).Value = True Then
+                    counter = counter + 1
+                End If
+            Next i
+            
+            usrl.setPropSize = counter
+            For i = 1 To recs.Fields.count - 1  'Property booleans start at 2
+                If recs.Fields(i).Value = "True" Then
+                    j = j + 1
+                    usrl.setProp(j) = recs.Fields(i).name
+                End If
+            Next i
+        End If
+        recs.MoveNext
+    Loop
+    
+    
+    recs.Close
+    conn.Close
+    
+    
+    Select Case usrl.getRole
+        Case "Admin"
+            Call adminLogin
+        Case "Support"
+            Call showDash
+        Case "Analyst"
+            Call showDash
+        Case Else
+            Debug.Print "Who are you even and how did you log in?"
+    End Select
+            
+    Else
+        MsgBox "Incorrect password", vbCritical
+    End If
+
+End Sub
+
+'Set user information for someone logging in
+Private Sub setUserData(usr As clsUser, recs As ADODB.Recordset)
+    usrl.setUsrID = recs.Fields("ID").Value
+    usrl.setRole = recs.Fields("role").Value
+    usrl.setName = recs.Fields("username").Value
+    usrl.setPw = recs.Fields("password").Value
+    usrl.setGroup = recs.Fields("groupNo").Value
+End Sub
+
+'Show the admin mode select screen to pick from legacy or menu mode.
+Private Sub adminLogin()
+        Unload LoginForm
+        AdminModeSelect.Show vbModeless
+End Sub
+
+'Bringup the dashboard
+Private Sub showDash()
+    Unload LoginForm
+    Call setupDash
+    DashScreen.Show
+    
+End Sub
+
+Private Sub setupDash()
+    Dim i As Integer, buttonName As String, balTxt As String, worksheetName As String, bal As String, _
+    notif As Integer, notifTx As String, totalnotifs As Integer, lateCount As Integer
+    
+    If DashScreen.Visible = False Then
+        For i = 1 To usr.getPropSize
+            notifScreen.Controls("notifLstBox" & i).Clear
+            'set button name
+            buttonName = "propButt" & i
+            balTxt = "bal" & i
+            notifTx = "notif" & i
+            worksheetName = usr.getProp(i)
+            DashScreen.Controls(buttonName).Caption = usr.getProp(i)
+            Worksheets(worksheetName).Activate
+            'get balance
+            bal = Range("H3").Value
+            
+            If Range("H3").Value = "0" Then
+                DashScreen.Controls(balTxt).Caption = "0.00"
+            ElseIf Not InStr(bal, ".") > 0 Then
+                DashScreen.Controls(balTxt).Caption = bal & ".00"
+            Else: DashScreen.Controls(balTxt).Caption = FormatNumber(bal, 2)
+            End If
+            
+            If usr.getRole = "Support" Then
+                totalnotifs = (getNotifs(i) + latefee(usr.getProp(i), i))
+                DashScreen.Controls(notifTx).Caption = CStr(totalnotifs)
+            End If
+        Next i
+    End If
+End Sub
+
+Private Function getNotifs(i As Integer) As Integer
+    Dim buttName As String, lstboxName As String, lastCharge As Date, last As Long, row As Integer, d As Date, j As Integer
+    Dim lateCount As Integer, datestr As String, arr() As String, dayspast As Integer
+    buttName = "propbutt" & i
+    lstboxName = "notifscreen.notiflstbox" & i
+    
+    getNotifs = 0
+    Dim today As Date, leaseExp As Date, days As Integer
+    today = Date
+    leaseExp = CDate(Range("I3").Value)
+    days = datediff("d", today, leaseExp)
+    lateCount = -1
+    
+    If days < 90 Then
+        If days > -1 Then
+            getNotifs = getNotifs + 1
+            If DashScreen.Controls(buttName).Caption = ActiveSheet.name Then
+                notifScreen.Controls("notifLstBox" & i).AddItem ("Property " & ActiveSheet.name & " expires in " & days & " days!!")
+                MsgBox ("Property " & ActiveSheet.name & " expires in " & days & "!!"), vbCritical
+            End If
+        End If
+    End If
+    
+    last = Range("E:E").Find(what:="Rent", after:=Range("E4"), SearchDirection:=xlPrevious).row
+    row = CInt(last)
+    d = CDate(Range("D" & row).Value)
+    d = DateAdd("d", 30, d)
+    last = Range("E:E").Find(what:="Rent", after:=Range("E4"), SearchDirection:=xlPrevious).row
+    row = CInt(last)
+    d = CDate(Range("D" & row).Value)
+    
+    'add if we need to charge rent
+    For j = 0 To 20
+        d = DateAdd("d", 30, d)
+        If d < today Then
+            getNotifs = getNotifs + 1
+            If DashScreen.Controls(buttName).Caption = ActiveSheet.name Then
+                notifScreen.Controls("notifLstBox" & i).AddItem ("Property " & ActiveSheet.name & " needs to be charged rent for period " & d & " !")
+                MsgBox ("Property " & ActiveSheet.name & " needs to be charged rent!"), vbCritical
+                arr = Split(datestr, "/")
+                dayspast = datediff("d", d, today)
+            End If
+        End If
+    Next j
+End Function
+
+Private Function latefee(prop As String, i As Integer) As Integer
+    Dim conn As New ADODB.Connection
+    Dim recs As New ADODB.Recordset
+    Dim q As String, filename As String
+    Dim gracep As Integer, dayspast As Integer, lastSpot As Long
+    Dim readDate As Date, dtoday As Date, dayslate As Integer, charges As Integer, j As Integer
+    Dim lstboxName As String, buttName As String, countDown As Date
+    
+    buttName = "propbutt" & i
+    lstboxName = "notifscreen.notiflstbox" & i
+    
+    filename = "\sjmchugh_final_db.accdb"
+    q = "SELECT * FROM tenants"
+    conn.Open "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & ThisWorkbook.Path & filename
+    recs.Open q, conn, adOpenKeyset, adLockOptimistic
+    Do While Not recs.EOF
+        If recs.Fields(8).Value = CStr(ActiveSheet.name) Then
+            gracep = recs.Fields(11).Value
+        End If
+        recs.MoveNext
+    Loop
+    recs.Close
+    conn.Close
+    
+    lastSpot = Cells(Rows.count, 1).End(xlUp).row - 1
+    For j = 0 To 10
+       If Range("A" & lastSpot + i).Value <> "" Then
+            If Range("A" & lastSpot + i).Value > 0 Then
+                'Debug.Print "spot is not empty"
+            Else
+                Exit For 'Debug.Print "spot is empty"
+            End If
+        End If
+    Next j
+    
+    dtoday = Date
+    lastSpot = lastSpot + 1
+    readDate = Range("D" & lastSpot - 1).Value
+    dayslate = datediff("d", readDate, dtoday)
+    charges = dayslate / gracep
+    
+    If charges < 0 Then
+        charges = charges * -1
+    End If
+    
+    latefee = charges
+    
+    countDown = readDate
+    
+    For j = 1 To charges    'welcome to notification hell.
+        If DashScreen.Controls(buttName).Caption = ActiveSheet.name Then
+                notifScreen.Controls("notifLstBox" & i).AddItem ("Property " & ActiveSheet.name & " got hit with a late fee on " & countDown & " !")
+                MsgBox ("Property " & ActiveSheet.name & " got hit with a late fee on " & countDown & "!"), vbCritical
+        End If
+        countDown = DateAdd("d", 3, countDown)
+    Next j
+    
+End Function

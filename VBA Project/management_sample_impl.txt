@@ -1,0 +1,301 @@
+Option Explicit
+
+Private Sub acceptButt_Click()
+    Dim conn As New ADODB.Connection
+    Dim recs As New ADODB.Recordset
+    Dim q As String, filename As String
+    Dim id As String
+    
+    filename = "\_db.accdb"
+    q = "SELECT * FROM tenants where SSN = '" & CStr(ssnTxt.Caption) & "'"
+    conn.Open "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & ThisWorkbook.Path & filename
+    recs.Open q, conn, adOpenKeyset, adLockOptimistic
+    
+    recs.Delete
+    
+    With recs
+        .AddNew
+        !FirstName = firstTextBox.Value
+        !LastName = lastTextBox.Value
+        !Email = emailTextBox.Value
+        !DOB = CDate(dobTextBox.Value)
+        !PhoneNumber = phoneTextBox.Value
+        !ssn = ssnTextBox.Value
+        !FreeFormField = fffTextBox.Value
+        !PropertyNo = propSelect.Value
+        !RentAmt = CCur(rentTxtBox.Value)
+        !InitLateFee = CCur(initFeeTxtBox.Value)
+        !GracePeriod = gpTxtBox.Value
+        !leaseExp = CDate(leaseTxtBox.Value)
+        !AddLateFee = CCur(secdepTxtBox.Value)
+        .Update
+    End With
+    
+    
+    firstTextBox.Value = recs.Fields(1).Value
+    lastTextBox.Value = recs.Fields(2).Value
+    emailTextBox.Value = recs.Fields(3).Value
+    dobTextBox.Value = recs.Fields(4).Value
+    phoneTextBox.Value = recs.Fields(5).Value
+    ssnTextBox.Value = recs.Fields(6).Value
+    fffTextBox.Value = recs.Fields(7).Value
+    propSelect.Value = recs.Fields(8).Value
+    rentTxtBox.Value = recs.Fields(9).Value
+    initFeeTxtBox.Value = recs.Fields(10).Value
+    addFeeTxtBox.Value = recs.Fields(13).Value
+    gpTxtBox.Value = recs.Fields(11).Value
+    leaseTxtBox.Value = recs.Fields(12).Value
+    secdepTxtBox.Value = recs.Fields(14).Value
+    
+    recs.Close
+    conn.Close
+End Sub
+
+Private Sub backButton_Click()
+    DashScreen.reportsButton.Visible = True
+    DashScreen.propertyMgmtButton.Visible = True
+    DashScreen.usrMgmtButton.Visible = True
+    DashScreen.tenantMgmtButt.Visible = True
+    Call AdminModeSelect.setupDash
+    Unload Me
+    DashScreen.Show vbModeless
+End Sub
+
+Private Sub back_Click()
+    Me.Hide
+    DashScreen.Show vbModeless
+    'DashScreen.reportsButton.Visible = True
+    'DashScreen.propertyMgmtButton.Visible = True
+    'DashScreen.usrMgmtButton.Visible = True
+    'DashScreen.tenantMgmtButt.Visible = True
+    'Call AdminModeSelect.setupDash
+    'Unload Me
+    'DashScreen.Show vbModeless
+End Sub
+
+Private Sub createButton_Click()
+    Dim str As String
+    Call DashScreen.popPropsAccess
+    modFrame.Visible = True
+    userFrame.Visible = False
+    modFrame.Left = 235
+    newTenButt.Visible = True
+    acceptButt.Visible = False
+    
+    firstTextBox.Value = ""
+    lastTextBox.Value = ""
+    emailTextBox.Value = ""
+    dobTextBox.Value = ""
+    ssnTextBox.Value = ""
+    phoneTextBox.Value = ""
+    fffTextBox.Value = ""
+    rentTxtBox.Value = ""
+    gpTxtBox.Value = ""
+    leaseTxtBox.Value = ""
+    addFeeTxtBox.Value = ""
+    secdepTxtBox.Value = ""
+    tenantBox.Value = "Select Tenant"
+    str = "N/A"
+End Sub
+
+Private Sub confDelete_Click()
+    If userFrame.Visible = False Then
+        modFrame.Left = 312
+        userFrame.Visible = True
+    End If
+    
+    If modFrame.Visible = True Then
+        modFrame.Visible = False
+    End If
+    
+    Dim conn As New ADODB.Connection
+    Dim recs As New ADODB.Recordset
+    Dim q As String, filename As String
+    Dim id As String
+    
+    filename = "\_db.accdb"
+    q = "SELECT * FROM tenants where SSN = '" & CStr(ssnTxt.Caption) & "'"
+    conn.Open "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & ThisWorkbook.Path & filename
+    recs.Open q, conn, adOpenKeyset, adLockOptimistic
+    
+    recs.Delete
+    
+    recs.Close
+    conn.Close
+    
+    confDelete.Visible = False
+    tenantBox.Value = "Select Tenant"
+End Sub
+
+Private Sub delButt_Click()
+    confDelete.Visible = True
+    
+    If modFrame.Visible = True Then
+        modFrame.Visible = False
+    End If
+End Sub
+
+Private Sub modButton_Click()
+    Dim i As Integer, counter As Integer, j As Integer
+    Dim conn As New ADODB.Connection
+    Dim recs As New ADODB.Recordset
+    Dim q As String, filename As String
+    Dim userSelected As String, propsListStr As String
+      
+    Call DashScreen.popPropsAccess
+    If userFrame.Visible = False Then
+        modFrame.Left = 312
+        userFrame.Visible = True
+    End If
+    
+    acceptButt.Visible = True
+    newTenButt.Visible = False
+    
+    userSelected = Split(tenantBox.Value, ",")(0)
+    
+    filename = "\_db.accdb"
+    q = "SELECT * FROM tenants"
+    conn.Open "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & ThisWorkbook.Path & filename
+    recs.Open q, conn, adOpenKeyset, adLockOptimistic
+    
+    Do While Not recs.EOF
+        If recs.Fields(1).Value = userSelected Then
+            firstNameTxt.Caption = recs.Fields(1).Value
+            lastNameTxt.Caption = recs.Fields(2).Value
+            emailTxt.Caption = recs.Fields(3).Value
+            dobTxt.Caption = recs.Fields(4).Value
+            phoneTxt.Caption = recs.Fields(5).Value
+            ssnTxt.Caption = recs.Fields(6).Value
+            freeformTxt.Caption = recs.Fields(7).Value
+            propTxt.Caption = recs.Fields(8).Value
+            rentTxt.Caption = recs.Fields(9).Value
+            initLateFeeTxt.Caption = recs.Fields(10).Value
+            addFeeTxt.Caption = recs.Fields(13).Value
+            graceTxt.Caption = recs.Fields(11).Value
+            expTxt.Caption = recs.Fields(12).Value
+            secTxt.Caption = recs.Fields(14).Value
+            
+            If modButton.Value = True Then
+                modFrame.Visible = True
+                firstTextBox.Value = recs.Fields(1).Value
+                lastTextBox.Value = recs.Fields(2).Value
+                emailTextBox.Value = recs.Fields(3).Value
+                dobTextBox.Value = recs.Fields(4).Value
+                phoneTextBox.Value = recs.Fields(5).Value
+                ssnTextBox.Value = recs.Fields(6).Value
+                fffTextBox.Value = recs.Fields(7).Value
+                propSelect.Value = recs.Fields(8).Value
+                rentTxtBox.Value = recs.Fields(9).Value
+                initFeeTxtBox.Value = recs.Fields(10).Value
+                addFeeTxtBox.Value = recs.Fields(13).Value
+                gpTxtBox.Value = recs.Fields(11).Value
+                leaseTxtBox.Value = recs.Fields(12).Value
+                secdepTxtBox.Value = recs.Fields(14).Value
+            End If
+        End If
+        recs.MoveNext
+    Loop
+    recs.Close
+    conn.Close
+
+    modFrame.Visible = True
+End Sub
+
+Private Sub newTenButt_Click()
+    Dim conn As New ADODB.Connection
+    Dim recs As New ADODB.Recordset
+    Dim q As String, filename As String, str As String
+    Dim id As Integer, group As Integer
+    
+    filename = "\_db.accdb"
+    q = "SELECT * FROM tenants where 1=0"
+    conn.Open "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & ThisWorkbook.Path & filename
+    recs.Open q, conn, adOpenKeyset, adLockOptimistic
+    
+    str = "N/A"
+    
+    With recs
+        .AddNew
+        !FirstName = firstTextBox.Value
+        !LastName = lastTextBox.Value
+        !Email = emailTextBox.Value
+        !DOB = CDate(dobTextBox.Value)
+        !PhoneNumber = phoneTextBox.Value
+        !ssn = ssnTextBox.Value
+        !FreeFormField = fffTextBox.Value
+        !PropertyNo = propSelect.Value
+        !RentAmt = CCur(rentTxtBox.Value)
+        !InitLateFee = CCur(initFeeTxtBox.Value)
+        !GracePeriod = gpTxtBox.Value
+        !leaseExp = CDate(leaseTxtBox.Value)
+        !AddLateFee = CCur(addFeeTxtBox.Value)
+        !SecurityDep = CCur(secdepTxtBox.Value)
+        !MoveOutDate = str
+        .Update
+    End With
+    
+    id = recs.Fields(0).Value
+    
+    recs.Close
+    conn.Close
+    
+    Call DashScreen.popTenants
+    
+End Sub
+
+Private Sub tenantBox_Change()
+    Dim i As Integer, counter As Integer, j As Integer
+    Dim conn As New ADODB.Connection
+    Dim recs As New ADODB.Recordset
+    Dim q As String, filename As String
+    Dim userSelected As String, propsListStr As String
+      
+    userSelected = Split(tenantBox.Value, ",")(0)
+    Debug.Print "user Selected: " & userSelected
+    filename = "\_db.accdb"
+    q = "SELECT * FROM tenants"
+    conn.Open "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & ThisWorkbook.Path & filename
+    recs.Open q, conn, adOpenKeyset, adLockOptimistic
+    
+    Do While Not recs.EOF
+        Debug.Print recs.Fields(1).Value, userSelected
+        If recs.Fields(1).Value = userSelected Then
+            firstNameTxt.Caption = recs.Fields(1).Value
+            lastNameTxt.Caption = recs.Fields(2).Value
+            emailTxt.Caption = recs.Fields(3).Value
+            dobTxt.Caption = recs.Fields(4).Value
+            phoneTxt.Caption = recs.Fields(5).Value
+            ssnTxt.Caption = recs.Fields(6).Value
+            freeformTxt.Caption = recs.Fields(7).Value
+            propTxt.Caption = recs.Fields(8).Value
+            rentTxt.Caption = recs.Fields(9).Value
+            initLateFeeTxt.Caption = recs.Fields(10).Value
+            addFeeTxt.Caption = recs.Fields(13).Value
+            graceTxt.Caption = recs.Fields(11).Value
+            expTxt.Caption = recs.Fields(12).Value
+            secTxt.Caption = recs.Fields(14).Value
+            
+            
+            If modButton.Value = True Then
+                modFrame.Visible = True
+                firstTextBox.Value = recs.Fields(1).Value
+                lastTextBox.Value = recs.Fields(2).Value
+                emailTextBox.Value = recs.Fields(3).Value
+                dobTextBox.Value = recs.Fields(4).Value
+                phoneTextBox.Value = recs.Fields(5).Value
+                ssnTextBox.Value = recs.Fields(6).Value
+                fffTextBox.Value = recs.Fields(7).Value
+                propSelect.Value = recs.Fields(8).Value
+                rentTxtBox.Value = recs.Fields(9).Value
+                propSelect.Value = recs.Fields(10).Value
+                addFeeTxtBox.Value = recs.Fields(13).Value
+                gpTxtBox.Value = recs.Fields(11).Value
+                leaseTxtBox.Value = recs.Fields(12).Value
+                secdepTxtBox.Value = recs.Fields(14).Value
+            End If
+        End If
+        recs.MoveNext
+    Loop
+    recs.Close
+    conn.Close
+End Sub
