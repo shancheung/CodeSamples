@@ -1,0 +1,50 @@
+//This service does a few things to a few pet monsters
+// 1. Examine the current existing monsters.
+// 2. Generate a new monster, client sends over an extended int and string for a name
+// 3. Feed monsters! Feed them whatever you want, they don't care they're monsters. Tell what food and how many.
+// 4. remove a monster, just requires an integer input
+
+syntax = "proto3";
+
+option java_multiple_files=true;
+option java_package = "service";
+option java_outer_classname = "MonsterProto";
+
+package services;
+
+service Monst{
+	rpc view (EmptyM) returns (MonsterResponse){}
+	rpc generate (NewMonReq) returns (MonsterResponse){}
+	rpc feed (FeedMonReq) returns (MonsterResponseFood){}
+	
+}
+
+//Nothing really needs to be sent, specifically for viewing monsters.
+message EmptyM{
+	
+}
+
+//Typically returns all of the monster data.
+message MonsterResponse{
+	string data=1;
+}
+
+//Request for new monster, multiple ints and a str will be sent
+message NewMonReq{
+	repeated int32 attr = 1;	//attributes used to generate monster.
+	//string mName = 2;		//monster's name - MAY NOT GET TO ACTUALLY DO THIS RIP
+	string uName = 3;		//who named it
+}
+
+//Request to feed monsters, designate the food and how many
+message FeedMonReq{
+	string food = 1;	//what we're feeding
+	string who = 2;	//who is feeding
+	int32 quant = 3;	//how much of the food
+	int32 mon = 4;		//dest. monster
+}
+
+//Monster's reaction to the food
+message MonsterResponseFood{
+	string monReact = 1;
+}

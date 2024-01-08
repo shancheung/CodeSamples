@@ -1,0 +1,130 @@
+///////////////////////////////////////////////////////////////////////////////
+//CUSTOM SECTION - MONSTERS
+	//for managing outputs and formatting the monsterResponse
+	public void formatMons(String s){
+		List<String> mons = new ArrayList<String>();
+		mons=Arrays.asList(s.split(","));
+		//System.out.println(mons);
+		String mstr; //monster's description
+		String creator; //who made that monster
+		String foods;
+		int count=0;
+		count=mons.size();
+		//System.out.println("How many monsters exist: "+count);
+		for(int i=0;i<count;i++){	//this is funky, but it works okay. ;u;
+			String t=mons.get(i);
+			List<String> mdata=Arrays.asList(t.split(":"));
+			mstr=mdata.get(0);
+			creator=mdata.get(1);
+			foods=mdata.get(2);
+			foods=foods.replace("[","");	
+			foods=foods.replace("]","");	
+			String nfo= System.lineSeparator()+mstr+"     "+creator+"     ";
+			nfo=nfo.replace("[","");
+			System.out.println(nfo);
+			System.out.println("-------------------Foods Fed-------------------");
+			System.out.println("    Food               Amount         Feeder");
+			int ctr=1;
+			List<String> foodlist=Arrays.asList(foods.split("_"));
+			try{
+				for(int j=0;j<foodlist.size();j++){
+					String line=foodlist.get(j);
+					List<String> pline=Arrays.asList(line.split("-"));
+					String item=pline.get(0);
+					String amt=pline.get(1);
+					String feeder=pline.get(2);
+					//figure out padding
+					String padding="";
+					int pad=22;
+					pad=pad-item.length();
+					for(int k=0;k<pad;k++){padding+=" ";}
+					//figure out other padding needed for between amt and feeder
+					String padding2="";
+					int pad2=15;
+					pad2=pad2-amt.length();
+					for(int l=0;l<pad2;l++){padding2+=" ";}
+					System.out.println(ctr+". "+item+padding+amt+padding2+feeder);
+					ctr++;
+				}
+			}
+			catch(ArrayIndexOutOfBoundsException obe){System.out.println("             Nobody has fed me yet ;'(");}
+			
+			System.out.println();
+		}
+		System.out.println(System.lineSeparator());
+	}
+	//for viewing the list of monsters already made
+	public void viewfun(){
+		EmptyM empt = EmptyM.newBuilder().build();
+		MonsterResponse mr = MonsterResponse.newBuilder().build();
+		
+		try{
+			System.out.println("Attempting to wrangle the monsters");
+			mr=blockingStub6.view(empt);
+			System.out.println("     ---------Monsters Created---------");
+			String s = mr.getData();
+			formatMons(s);
+			//mr.clearData();
+		}
+		catch(Exception e){e.printStackTrace(); 
+		System.out.println("Error in view() funct in client");}
+	}
+	
+	public List<Integer> getgenvals() throws IOException{
+		List<Integer> lst = new ArrayList<Integer>();
+		try{
+			BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+			Random rand=new Random();	//incase the client tries to not follow directions.
+			System.out.println("Okay, so I'll need 3 numbers from you between 1 and 9.");
+			System.out.println("If you fail to comply, I will replace the value.");
+			int ctr=1;
+			int val=0;
+			for(int i=0;i<3;i++){
+				try{
+					val=0;
+					boolean isint=false;
+					System.out.println("Attribute "+ctr+" shall be..");
+					String inp=reader.readLine();
+					System.out.println("You entered: "+inp);
+					val=Integer.parseInt(inp);
+					isint=true;
+					if(isint==true && val>=1 && val<=9){
+						lst.add(val);
+					}
+					else{
+						System.out.println("I didn't like your input, so you're getting a new one.");
+						val=rand.nextInt(9);
+						val+=1;
+						System.out.println("Replacement: "+val);
+						lst.add(val);
+					}
+				}catch(NumberFormatException nfe){
+					System.out.println("Fine, you don't want to follow the rules...");
+					val=rand.nextInt(9);
+					val+=1;
+					System.out.println("Replacement: "+val);
+					lst.add(val);
+				}
+				ctr++;
+		}
+		}catch(Exception nfe){
+			System.out.println("Wise guy eh?");
+			}
+		
+		return lst;
+	}
+	//generate monster!
+	public void genfun(String un, List<Integer> lst){
+		//System.out.println("User: "+un+System.lineSeparator()+"Data to send: "+lst+System.lineSeparator());
+		NewMonReq nmr=NewMonReq.newBuilder().addAllAttr(lst).setUName(un).build();
+		MonsterResponse mr=MonsterResponse.newBuilder().build();
+		
+		try{
+			mr=blockingStub6.generate(nmr);
+			System.out.println("     =====WOW NEW MONSTER!!=====");
+			String s=mr.getData();
+			formatMons(s);
+		}
+		catch(Exception e){e.printStackTrace();
+			System.out.println("Error in genfun()");}
+	}
