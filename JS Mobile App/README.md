@@ -1,0 +1,1 @@
+Sample login code in JavaScript for a login screen. Functional and other code has been redacted as this serves as just an example of how the login screen was made.
